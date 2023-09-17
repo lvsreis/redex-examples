@@ -111,6 +111,30 @@
 ; The redex substitutions functions
 
 (default-language Lambda)
+; Observe the result of these functions when there is no binding definition
 (term
- (substitute (x (λ x (λ y x))) x y)
- )
+ (substitute (x (λ x (λ y x)))
+             x
+             (y y)))
+(alpha-equivalent? Lambda
+       (term (x (λ x (λ y x))))
+       (term (x (λ z (λ y z)))))
+
+(define-language Lambda-with-binding
+  [e ::= x
+     (e e)
+     (λ x e)]
+  [x y := variable-not-otherwise-mentioned]
+
+  #:binding-forms
+   (λ x e #:refers-to x))
+
+(default-language Lambda-with-binding)
+(term
+ (substitute (x (λ x (λ y x)))
+             x
+             (y y)))
+
+(alpha-equivalent? Lambda-with-binding
+       (term (x (λ x (λ y x))))
+       (term (x (λ z (λ y z)))))
