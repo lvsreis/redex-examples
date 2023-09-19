@@ -98,7 +98,7 @@
   [(subs x e (λ x_1 e_1)) (λ x_new (subs x e e_new))
      (where x_new ,(variable-not-in (term (x_1 e_1)) (term x_1)))
      (where e_new (subs x_1 x_new e_1))]
-  [(subs x e (e_1 e_2)) ((subs+ x e e_1) (subs x e e_2))])
+  [(subs x e (e_1 e_2)) ((subs x e e_1) (subs x e e_2))])
 
 ; Now the substitution is correct!
 (test-equal (term (subs x z (λ z x)))

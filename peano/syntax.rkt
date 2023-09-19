@@ -2,6 +2,8 @@
 
 (require redex)
 
+(provide (all-defined-out))
+
 (define-language Peano
   (P ::= 0
      (s P)

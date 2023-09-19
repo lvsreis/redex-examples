@@ -2,6 +2,8 @@
 
 (require redex)
 
+(provide (all-defined-out)
+
 (define-language WExpr
   [A ::= natural x
      (+ A A)

@@ -2,6 +2,8 @@
 
 (require redex)
 
+(provide (all-defined-out))
+
 (define-language Logic
   [L ::= ⊤ ⊥ p
      (¬ L)

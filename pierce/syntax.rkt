@@ -2,6 +2,8 @@
 
 (require redex)
 
+(provide (all-defined-out))
+
 (define-language Pierce
   [T ::= true false 0
      (if T T T)
