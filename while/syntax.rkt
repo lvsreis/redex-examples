@@ -2,7 +2,7 @@
 
 (require redex)
 
-(provide (all-defined-out)
+(provide (all-defined-out))
 
 (define-language WExpr
   [A ::= natural x
@@ -22,3 +22,5 @@
      (S S)
      (if B S S)
      (while B S)])
+
+(redex-match? WExpr A (term (+ 1 (* a (- b 3)))))

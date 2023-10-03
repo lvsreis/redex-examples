@@ -33,10 +33,10 @@
 #;(stepper r (term
     (if (iszero (succ 0)) (succ (pred 0)) 0)))
 
-(define ->r (compatible-closure r Pierce T))
+#;(define ->r (compatible-closure r Pierce T))
 
 #;(stepper ->r (term
     (iszero (pred (succ 0)))))
 
-#;(stepper ->r (term
+(stepper ->r (term
     (if (iszero (succ 0)) (succ (pred 0)) 0)))

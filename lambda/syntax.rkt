@@ -2,6 +2,8 @@
 
 (require redex)
 
+(provide (all-defined-out))
+
 (define-language Lambda
   [e ::= x
      (e e)
