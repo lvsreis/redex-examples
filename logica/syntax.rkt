@@ -5,7 +5,7 @@
 (provide (all-defined-out))
 
 (define-language Logic
-  [L ::= ⊤ ⊥ p
+  [L ::= ⊤ ⊥ p q r
      (¬ L)
      (∧ L L)
      (∨ L L)

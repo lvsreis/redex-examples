@@ -75,5 +75,47 @@
 #;(stepper ->r (term
     (∨ (→ ⊤ ⊥) (¬ (∧ ⊥ ⊤)))))
 
-#;(stepper ->r (term
-    (∨ (→ ⊤ ⊥) (∧ (→ (¬ ⊤) ⊥) (¬ ⊤))))) 
+#;(traces ->r (term
+    (∨ (→ ⊤ ⊥) (∧ (→ (¬ ⊤) ⊥) (¬ ⊤)))))
+
+#| Especificando Redução com Contexto |#
+
+(define-extended-language LogicCtx Logic
+  [C ::= hole
+     (¬ C)
+     (∧ C L)
+     (∨ C L)
+     (→ C L)
+     (↔ C L)])
+
+; relação de redução usando o context-closure
+(define r_ctx (context-closure r LogicCtx C))
+
+#;(traces r_ctx (term
+    (∨ (→ ⊤ ⊥) (¬ (∧ ⊥ ⊤)))))
+
+#;(traces r_ctx (term
+    (∨ (→ ⊤ ⊥) (∧ (→ (¬ ⊤) ⊥) (¬ ⊤)))))
+
+(define rw_ctx
+  (reduction-relation LogicCtx
+     #:domain L
+     #:codomain L
+     (==> (¬ ⊤) ⊥ "neg⊤")
+     (==> (¬ ⊥) ⊤ "neg⊥")
+     (==> (∧ ⊤ L) L "conj⊤")
+     (==> (∧ ⊥ L) ⊥ "conj⊥")
+     (==> (∨ ⊤ L) ⊤ "disj⊤")
+     (==> (∨ ⊥ L) L  "disj⊥")
+     (==> (→ ⊤ L)  L "cond⊤")
+     (==> (→ ⊥ L) ⊤ "cond⊥")
+     (==> (↔ ⊤ L) L "bic⊤")
+     (==> (↔ ⊥ L) (¬ L) "bic⊥")
+  with [(--> (in-hole C t1) (in-hole C t2))
+        (==> t1 t2)]))
+
+#;(traces rw_ctx (term
+    (∨ (→ ⊤ ⊥) (¬ (∧ ⊥ ⊤)))))
+
+#;(traces rw_ctx (term
+    (∨ (→ ⊤ ⊥) (∧ (→ (¬ ⊤) ⊥) (¬ ⊤)))))
