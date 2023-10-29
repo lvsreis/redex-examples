@@ -31,36 +31,79 @@ values = natural
 
 |#
 
+(define-extended-language WhileCtx While
+  [env ::= ((x natural) ...)] ; Definição do Ambiente (Environment)
+  [v ::= natural true false]  ; valores
+  [state ::= (env S)]         ; estado da máquina
+  [s ::= state env]           ; resultado da computação small-step
+  [E ::= hole                 ; contexto de redução
+     (+ E A) (* E A) (- E A) (+ v E) (* v E) (- v E)
+     (= E A) (<= E A) (& E B) (not E) (= v E) (<= v E) (& v E)
+     (:= x E) (E S) (if E S S) #;(while E S)])
 
-(define-extended-language s-While While
-  [s ::= (((x natural) ...) S) ((x natural) ...)]
-  [v ::= natural])
+(define-metafunction WhileCtx
+  update-env : env x v -> env
+  [(update-env ((x_1 v_1) ... (x v) (x_2 v_2) ...) x v_new) ((x_1 v_1) ... (x v_new) (x_2 v_2) ...)]
+  [(update-env ((x_1 v_1) ...) x v) ((x v) (x_1 v_1) ...)])
 
-
-(define r (reduction-relation s-While
-  #:domain s
-  (--> (any skip) any)
-  (--> (((x_1 natural_1) ... (x natural) (x_2 natural_2) ...) (:= x natural_3)) ((x_1 natural_1) ... (x natural_3) (x_2 natural_2) ...))
-  (--> ((((name xs x_!_) natural) ...) (:= (name x1 x_!_) natural_1)) ((x1 natural_1) (xs natural) ...))
-  (--> (any (if true S_1 S_2)) (any S_1))
-  (--> (any (if false S_1 S_2)) (any S_2))
-  (--> (any (while B S)) (any (if B (S (while B S)) skip)))
-  ; regra básica da sequência
-  (--> (any (skip S)) (any S))
-  (--> (((x_1 natural_1) ... (x natural) (x_2 natural_2) ...) ((:= x natural_3) S)) (((x_1 natural_1) ... (x natural_3) (x_2 natural_2) ...) S))
-  (--> ((((name xs x_!_) natural) ...) ((:= (name x1 x_!_) natural_1) S)) (((x1 natural_1) (xs natural) ...) S))
-  ))
+(define r (reduction-relation WhileCtx
+   #:domain s
+   ; Semântica dos Comandos
+   (--> [env skip] env)                                 ; ⟨Δ, skip⟩ ⟶ Δ
+   (--> [env (in-hole E (:= x v))]                      ; ⟨Δ, := x v⟩ ⟶ ⟨Δ[[x / x]], skip⟩
+        [(update-env env x v) (in-hole E skip)])
+   (--> [env (in-hole E (skip S))]                      ; ⟨Δ, skip ; S⟩ ⟶ ⟨Δ, S⟩
+        [env (in-hole E S)])
+   (--> [env (in-hole E (if true S_1 S_2))]             ; ⟨Δ, if true S₁ S₂⟩ ⟶ ⟨Δ, S₁⟩
+        [env (in-hole E S_1)])
+   (--> [env (in-hole E (if false S_1 S_2))]            ; ⟨Δ, if false S₁ S₂⟩ ⟶ ⟨Δ, S₂⟩
+        [env (in-hole E S_2)])
+   (--> [env (in-hole E (while B S))]                   ; ⟨Δ, while B S⟩ ⟶ ⟨Δ, if B then (S; while B S) else skip⟩
+        [env (in-hole E (if B (S (while B S)) skip))])
+   ; Semântica das expressões
+   (--> [((x_1 v_1) ... (x v) (x_2 v_2) ...) (in-hole E x)]         ; ⟨Δ, x⟩ ⟶ ⟨Δ, Δ[[x]]⟩
+        [((x_1 v_1) ... (x v) (x_2 v_2) ...) (in-hole E v)])
+   (--> [env (in-hole E (+ natural_1 natural_2))]                   ; ⟨Δ, (+ n₁ n₂)⟩ ⟶ ⟨Δ, n₁ + n₂⟩
+        [env (in-hole E ,(+ (term natural_1) (term natural_2)))])
+   (--> [env (in-hole E (* natural_1 natural_2))]                   ; ⟨Δ, (* n₁ n₂)⟩ ⟶ ⟨Δ, n₁ * n₂⟩
+        [env (in-hole E ,(* (term natural_1) (term natural_2)))])
+   (--> [env (in-hole E (- natural_1 natural_2))]                   ; ⟨Δ, (- n₁ n₂)⟩ ⟶ ⟨Δ, n₁ - n₂⟩
+        [env (in-hole E ,(- (term natural_1) (term natural_2)))])
+   (--> [env (in-hole E (= natural natural))]                       ; ⟨Δ, (= n n)⟩ ⟶ ⟨Δ, true⟩
+        [env (in-hole E true)])
+   (--> [env (in-hole E (= natural_!_ natural_!_))]                 ; ⟨Δ, (= n₁ n₂)⟩ ⟶ ⟨Δ, false⟩
+        [env (in-hole E false)])
+   (--> [env (in-hole E (<= natural_1 natural_2))]                  ; ⟨Δ, (<= n₁ n₂)⟩ ⟶ ⟨Δ, n₁ ≤ n₂⟩
+        [env (in-hole E ,(if (<= (term natural_1) (term natural_2)) (term true) (term false)))])
+   (--> [env (in-hole E (& true B))]                                ; ⟨Δ, (& true b)⟩ ⟶ ⟨Δ, b⟩
+        [env (in-hole E B)])
+   (--> [env (in-hole E (& false B))]                               ; ⟨Δ, (& false b)⟩ ⟶ ⟨Δ, false⟩
+        [env (in-hole E false)])
+   (--> [env (in-hole E (not true))]                                ; ⟨Δ, (not true)⟩ ⟶ ⟨Δ, false⟩
+        [env (in-hole E false)])
+   (--> [env (in-hole E (not false))]                               ; ⟨Δ, (not false)⟩ ⟶ ⟨Δ, true⟩
+        [env (in-hole E true)])))
 
 ;(traces r (term (() skip)))
-;(traces r (term (() (:= x 5))))
-;(traces r (term (((y 2) (x 3) (z 4)) (:= x 5))))
-;(traces r (term (() (if true skip (:= x 7)))))
-;(traces r (term (() (if false skip (:= x 7)))))
+;(traces r (term (() (:= x (- 3 2)))))
+;(traces r (term (((y 2) (x 3) (z 4)) (:= x (+ y z)))))
+;(traces r (term (() ((:= x 5) (:= y 3)))))
+;(traces r (term (() (if (= 1 1) skip (:= x 7)))))
+;(traces r (term (() (if (<= 3 2) skip (:= x 7)))))
 ;(traces r (term (() (while true skip))))
 ;(traces r (term (() (while false skip))))
 ;(traces r (term (((x 0)) ((:= x 3) skip))))
 ;(traces r (term (() ((:= x 3) skip))))
 
-(define ->r (compatible-closure r s-While S))
-#;(traces ->r (term (((x 5) (y 7))
+#;(traces r (term (((x 5) (y 7))
                    (((:= z x) (:= x y)) (:= y z)))))
+
+#;(traces r (term (((x 3))
+                 ((:= y 1) (while (not (= x 1))
+                             ((:= y (* y x)) (:= x (- x 1))))))))
+
+#;(traces r (term (((x 17) (y 5))
+                 ((:= z 0)
+                  (while (<= y x)
+                    ((:= z (+ z 1))
+                     (:= x (- x y))))))))
