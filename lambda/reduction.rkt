@@ -7,7 +7,7 @@
 ; redução β-reduction
 (define β-reduction (reduction-relation Lambda
   #:domain e
-  (--> ((λ x e) e_1) (subs x e_1 e))))                  
+  (--> ((λ x e) e_1) (subs x e_1 e))))
 
              ;(λ z .λ x .x z ) y
 ;(traces β-reduction (term ((λ z (λ x (x z))) y)))

@@ -47,7 +47,8 @@ values = natural
   [(update-env ((x_1 v_1) ...) x v) ((x v) (x_1 v_1) ...)])
 
 (define r (reduction-relation WhileCtx
-   #:domain s
+   #:domain state
+   #:codomain s
    ; Semântica dos Comandos
    (--> [env skip] env)                                 ; ⟨Δ, skip⟩ ⟶ Δ
    (--> [env (in-hole E (:= x v))]                      ; ⟨Δ, := x v⟩ ⟶ ⟨Δ[[x / x]], skip⟩
